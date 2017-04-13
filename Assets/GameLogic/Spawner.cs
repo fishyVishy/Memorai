@@ -6,9 +6,11 @@ using UnityEngine.Events;
  * Responsible for spawning enemies at the beginning of the level
  */
 public class Spawner : MonoBehaviour {
+    public GameObject[] spawnPoints;
     public GameObject[] spawner;
     public int maxSpawnPerWave;
     public UnityEvent finishEvent;
+    public UnityEvent startEvent;
 
     ArrayList curList = new ArrayList();
 
@@ -18,11 +20,15 @@ public class Spawner : MonoBehaviour {
 
     public void spawn() {
         int waveCounter = 0;
+        if (spawnCounter == 0) {
+            startEvent.Invoke();
+        }
         while (waveCounter < maxSpawnPerWave) {
             if (spawnCounter < spawner.Length) {
                 GameObject spawn = spawner[spawnCounter];
                 spawnCounter += 1;
-                GameObject newEnemy = Instantiate(spawn, new Vector2(transform.position.x + (Random.Range(-20, 20)), transform.position.y), Quaternion.identity);
+                Vector3 spawnPoint = spawnPoints[Random.Range(0, spawnPoints.Length - 1)].GetComponent<Transform>().position;
+                GameObject newEnemy = Instantiate(spawn, new Vector2(spawnPoint.x + Random.Range(-2,2), spawnPoint.y + Random.Range(-2,2)), Quaternion.identity);
                 curList.Add(newEnemy);
             }
             waveCounter += 1;
@@ -41,6 +47,10 @@ public class Spawner : MonoBehaviour {
             finishEvent.Invoke();
             finished = true;
         }
+    }
+
+    public ArrayList getCurArray() {
+        return curList;
     }
 
   

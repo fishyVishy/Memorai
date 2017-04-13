@@ -5,9 +5,13 @@ using UnityEngine;
 public class FinalBossBehaviour : MonoBehaviour {
     CameraFuncs cam;
     Animator animator;
+    public EvilCloudFunctions clouds;
     public int health = 100;
+    public int attackProbability = 1000;
+    public float restTime = 10.0f;
 
     public GameObject lightning;
+    public GameObject[] possibleSpawn;
 
 	void Start () {
         animator = gameObject.GetComponent<Animator>();
@@ -18,8 +22,18 @@ public class FinalBossBehaviour : MonoBehaviour {
     
 	void Update () {
         openingCameraShake();    
-        if (Input.GetKeyDown(KeyCode.L)) {
-            Instantiate(lightning, new Vector3(0, 16, 0), Quaternion.identity);
+        if (health < 20) {
+            attackProbability = 10;
+        }
+        if (!animator.GetBool("Vunerable") && !animator.GetBool("Awakening") && !animator.GetBool("Death") && Random.Range(0, attackProbability) == 0) {
+            if (health > 30) {
+                clouds.startSparks();
+                spawnEnemies();
+            } else {
+                clouds.startSimulSparks();
+                spawnEnemies();
+            }
+            StartCoroutine(cooldown());
         }
 	}
 
@@ -44,6 +58,8 @@ public class FinalBossBehaviour : MonoBehaviour {
     }
 
     public void hurt() {
+        animator.SetBool("Vunerable", false);
+        StopAllCoroutines();
         health -= 10;
         if (health <= 0) {
             death();
@@ -55,5 +71,24 @@ public class FinalBossBehaviour : MonoBehaviour {
         cam.shakeOnce();
     }
 
+    void spawnEnemies() {
+        GameObject[] cur = GameObject.FindGameObjectsWithTag("enemy");
+        if (cur.Length <= 6) {
+            if (Random.Range(0, 3) == 1) {
+                Instantiate(possibleSpawn[Random.Range(0, possibleSpawn.Length - 1)], transform.position, Quaternion.identity);
+            }
+        }
+    }
+
+    IEnumerator cooldown() {
+        if (animator.GetBool("Vunerable") == false) {
+            yield return new WaitForSeconds(5);
+            animator.SetBool("Vunerable", true);
+            yield return new WaitForSeconds(restTime);
+            if (animator.GetBool("Vunerable")) {
+                animator.SetBool("Vunerable", false);
+            }
+        }
+    }
 
 }
